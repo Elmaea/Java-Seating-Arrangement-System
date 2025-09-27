@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+  <div class="upload-outer">
+    <h1 class="upload-title">Upload CSV Files</h1>
+    <div class="upload-sub">Upload exam schedule and student list to generate seating plan</div>
+    <div class="upload-cards">
+      <div class="upload-card">
+        <div class="upload-card-title"><span style="font-size:1.3em;"></span> Exam Schedule</div>
+        <div class="upload-card-desc">Upload CSV file containing exam details </div>
+        <label class="upload-drop" for="exam-csv">
+          <input type="file" id="exam-csv" accept=".csv" style="display:none">
+          <div class="upload-drop-inner"> <span style="font-size:2em;"><i class="fa-solid fa-arrow-up-from-bracket"></i></span><br>Click to upload exam schedule CSV</div>
+        </label>
+      </div>
+      <div class="upload-card">
+        <div class="upload-card-title"><span style="font-size:1.3em;"></span> Student List</div>
+        <div class="upload-card-desc">Upload CSV file containing student details</div>
+        <label class="upload-drop" for="student-csv">
+          <input type="file" id="student-csv" accept=".csv" style="display:none">
+          <div class="upload-drop-inner"> <span style="font-size:2em;"><i class="fa-solid fa-arrow-up-from-bracket"></i></span><br>Click to upload student list CSV</div>
+        </label>
+      </div>
+    </div>
+    <button class="generate-btn" id="generateBtn">Generate Seating Plan &rarr;</button>
+  </div>
+  <script>
+    document.getElementById('generateBtn').onclick = function() {
+      window.location.href = 'seating.html';
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seating Plan</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="seating-outer">
+    <div class="seating-header-row">
+      <div class="seating-header-left">
+        <button class="back-btn" onclick="window.location.href='upload.html'">&larr; Back</button>
+      </div>
+      <div class="seating-header-center">
+        <h1 class="seating-title">Seating Plan</h1>
+      </div>
+      <div class="seating-header-right">
+        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+      </div>
+    </div>
+    <div class="seating-placeholder">[Seating arrangement will appear here]</div>
+  </div>
+  <script>
+    function exportCSV() {
+      alert('Export CSV feature will be added');
+    }
+  </script>
+</body>
+</html>
