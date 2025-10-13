@@ -2,20 +2,29 @@ import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-       /* String studentFile = "C:\\Users\\Admin\\Downloads\\Student details - Exam.csv";
-//  C:\Users\Admin\Downloads\Student details - Exam.csv
-//  C:\\Users\\Admin\\Downloads\\Student details - Student.csv
+        String studentFile = "C:\\Users\\Admin\\Downloads\\Student details - Student.csv";
+        String examFile = "C:\\Users\\Admin\\Downloads\\Student details - Exam.csv";
+
         ArrayList<Student> students = StudentReader.readStudentsFromCSV(studentFile);
+        ArrayList<Exam> exams = ExamReader.readExamsFromCSV(examFile);
 
-        System.out.println("Students from CSV:");
+        ArrayList<Seating> seatingList = new ArrayList<>();
+
         for (Student s : students) {
-            System.out.println(s);
-        }*/
-        String filePath = "C:\\Users\\Admin\\Downloads\\Student details - Exam.csv";
-        ArrayList<Exam> exams = ExamReader.readExamsFromCSV(filePath);
+            for (Exam e : exams) {
+                if (s.getDepartment().equalsIgnoreCase(e.getDepartment()) &&
+                    s.getYear().equalsIgnoreCase(e.getYear())) {
 
-        for (Exam exam : exams) {
-            System.out.println(exam.printExam());
+                    seatingList.add(new Seating(s, e));
+                }
+            }
+        }
+
+        // Print out seating plan
+        System.out.println("Seating Plan:");
+        for (Seating seat : seatingList) {
+            System.out.println(seat);
         }
     }
 }
+
