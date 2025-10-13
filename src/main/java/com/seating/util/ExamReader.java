@@ -1,35 +1,23 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+package com.seating.util;
+
+import com.seating.model.Exam;
+import java.io.*;
 import java.util.ArrayList;
 
 public class ExamReader {
     public static ArrayList<Exam> readExamsFromCSV(String filePath) {
         ArrayList<Exam> exams = new ArrayList<>();
-        
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            br.readLine(); // Skip header line
+            br.readLine(); // skip header
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
-                
                 if (values.length == 5) {
-                    String examDate = values[0].trim();
-                    String subject = values[1].trim();
-                    String subjectCode = values[2].trim();
-                    String department = values[3].trim();
-                    String year = values[4].trim();
-
-                    Exam exam = new Exam(examDate, subject, subjectCode, department, year);
-                    exams.add(exam);
-                } else {
-                    System.out.println("Skipping invalid line: " + line);
+                    exams.add(new Exam(values[0].trim(), values[1].trim(), values[2].trim(),
+                                       values[3].trim(), values[4].trim()));
                 }
             }
-        } catch (IOException e) {
-            System.out.println("Error reading file: " + e.getMessage());
-        }
-
+        } catch (IOException e) { e.printStackTrace(); }
         return exams;
     }
 }

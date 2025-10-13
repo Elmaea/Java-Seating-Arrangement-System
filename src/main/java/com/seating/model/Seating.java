@@ -1,3 +1,5 @@
+package com.seating.model;
+
 public class Seating {
     private Student student;
     private Exam exam;
@@ -7,13 +9,8 @@ public class Seating {
         this.exam = exam;
     }
 
-    public Student getStudent() {
-        return student;
-    }
-
-    public Exam getExam() {
-        return exam;
-    }
+    public Student getStudent() { return student; }
+    public Exam getExam() { return exam; }
 
     @Override
     public String toString() {

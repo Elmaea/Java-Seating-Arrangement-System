@@ -1,3 +1,5 @@
+package com.seating.model;
+
 public class Student {
     private String rollNo;
     private String department;
@@ -9,20 +11,7 @@ public class Student {
         this.year = year;
     }
 
-    // Getters
-    public String getRollNo() {
-        return rollNo;
-    }
-    public String getDepartment() {
-        return department;
-    }
-    public String getYear() {
-        return year;
-    }
-
-    @Override
-    public String toString() {
-        return rollNo + " - " + department + " (Year " + year + ")";
-    }
+    public String getRollNo() { return rollNo; }
+    public String getDepartment() { return department; }
+    public String getYear() { return year; }
 }
-

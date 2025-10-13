@@ -6,24 +6,47 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="seating-outer">
-    <div class="seating-header-row">
-      <div class="seating-header-left">
-        <button class="back-btn" onclick="window.location.href='upload.html'">&larr; Back</button>
-      </div>
-      <div class="seating-header-center">
-        <h1 class="seating-title">Seating Plan</h1>
-      </div>
-      <div class="seating-header-right">
-        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
-      </div>
-    </div>
-    <div class="seating-placeholder">[Seating arrangement will appear here]</div>
-  </div>
+  <h1>Seating Plan</h1>
+  <div class="seating-placeholder">Loading...</div>
+  <button id="exportBtn">Export CSV</button>
+
   <script>
-    function exportCSV() {
-      alert('Export CSV feature will be added');
-    }
+    const BACKEND_URL = 'http://localhost:8080';
+
+    // Fetch seating plan on page load
+    window.onload = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/seating`);
+        if (!res.ok) throw new Error('Failed to fetch seating plan');
+
+        const seating = await res.json();
+        const container = document.querySelector('.seating-placeholder');
+        container.innerHTML = seating.map(row => `<div>${row}</div>`).join('');
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    };
+
+    // Export seating plan as CSV
+    document.getElementById('exportBtn').onclick = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/seating`);
+        if (!res.ok) throw new Error('Failed to fetch seating plan');
+
+        const data = await res.json();
+        const csvContent = "data:text/csv;charset=utf-8," + data.join("\n");
+        const encodedUri = encodeURI(csvContent);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "SeatingPlan.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        alert('Error exporting CSV: ' + error.message);
+      }
+    };
   </script>
 </body>
 </html>
