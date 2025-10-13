@@ -24,6 +24,7 @@
         container.innerHTML = seating.map(row => `<div>${row}</div>`).join('');
       } catch (error) {
         alert('Error: ' + error.message);
+        document.querySelector('.seating-placeholder').innerHTML = 'No seating plan available.';
       }
     };
 

@@ -1,4 +1,4 @@
-package com.seating.seating_arrangement;
+package com.seating;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

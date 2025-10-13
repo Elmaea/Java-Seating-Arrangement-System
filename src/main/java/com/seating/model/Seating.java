@@ -14,7 +14,7 @@ public class Seating {
 
     @Override
     public String toString() {
-        return student.getRollNo() + " - " + student.getDepartment() + " (Year " + student.getYear() + ") | "
-             + exam.getExamDate() + " - " + exam.getSubject() + " (" + exam.getSubjectCode() + ")";
+        return student.getRollNo() + " | " + student.getDepartment() + " (Year " + student.getYear() + ") | "
+                + exam.getExamDate() + " - " + exam.getSubject() + " (" + exam.getSubjectCode() + ")";
     }
 }
