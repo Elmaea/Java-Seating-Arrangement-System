@@ -1,56 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Upload CSV</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Files - Exam Seating Management</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="upload-outer">
-    <h1>Upload CSV Files</h1>
-    <label>Exam Schedule:
-      <input type="file" id="exam-csv" accept=".csv">
-    </label>
-    <label>Student List:
-      <input type="file" id="student-csv" accept=".csv">
-    </label>
-    <label>Class/Room Details:
-      <input type="file" id="class-csv" accept=".csv">
-    </label>
-    <button id="generateBtn">Generate Seating Plan</button>
-  </div>
+    <div class="upload-outer">
+        <h1 class="upload-title">Upload Data Files</h1>
+        <p class="upload-sub">Please upload the required CSV files to generate the seating plan</p>
+        
+        <div class="upload-cards">
+            <div class="upload-card">
+                <div class="upload-card-title">Exam Schedule</div>
+                <p class="upload-card-desc">Upload exam schedule with dates and subjects</p>
+                <div class="upload-drop" id="exam-drop">
+                    <input type="file" id="exam-csv" accept=".csv" style="display: none;">
+                    <div class="upload-drop-inner">
+                        Click to upload exam schedule CSV
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-card">
+                <div class="upload-card-title">Student List</div>
+                <p class="upload-card-desc">Upload student details with departments</p>
+                <div class="upload-drop" id="student-drop">
+                    <input type="file" id="student-csv" accept=".csv" style="display: none;">
+                    <div class="upload-drop-inner">
+                        Click to upload student list CSV
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-card">
+                <div class="upload-card-title">Room Details</div>
+                <p class="upload-card-desc">Upload classroom capacity and layout</p>
+                <div class="upload-drop" id="class-drop">
+                    <input type="file" id="class-csv" accept=".csv" style="display: none;">
+                    <div class="upload-drop-inner">
+                        Click to upload room details CSV
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="generateBtn" class="generate-btn">Generate Seating Plan</button>
+    </div>
 
   <script>
-    const BACKEND_URL = 'http://localhost:8080'; // Your Spring Boot backend
+    const BACKEND_URL = 'http://localhost:8080';
+
+    // Handle file drop zone clicks
+    ['exam', 'student', 'class'].forEach(type => {
+        const dropZone = document.getElementById(`${type}-drop`);
+        const input = document.getElementById(`${type}-csv`);
+        
+        dropZone.onclick = () => input.click();
+        
+        input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+                dropZone.querySelector('.upload-drop-inner').textContent = file.name;
+                dropZone.style.borderColor = '#6a82fb';
+            }
+        };
+    });
 
     document.getElementById('generateBtn').onclick = async function() {
-      const examFile = document.getElementById('exam-csv').files[0];
-      const studentFile = document.getElementById('student-csv').files[0];
-      const classFile = document.getElementById('class-csv').files[0];
+        const examFile = document.getElementById('exam-csv').files[0];
+        const studentFile = document.getElementById('student-csv').files[0];
+        const classFile = document.getElementById('class-csv').files[0];
 
-      if (!examFile || !studentFile || !classFile) {
-        alert('Upload all three CSV files!');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('examFile', examFile);
-      formData.append('studentFile', studentFile);
-      formData.append('classFile', classFile);
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/upload`, { method: 'POST', body: formData });
-        const result = await res.json();
-
-        if (res.ok) {
-          alert('Files uploaded successfully!');
-          window.location.href = 'seatingplan.html';
-        } else {
-          alert('Upload failed: ' + result.message);
+        if (!examFile || !studentFile || !classFile) {
+            alert('Please upload all three required CSV files');
+            return;
         }
-      } catch (error) {
-        alert('Error uploading files: ' + error.message);
-      }
+
+        const formData = new FormData();
+        formData.append('examFile', examFile);
+        formData.append('studentFile', studentFile);
+        formData.append('classFile', classFile);
+
+        try {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+
+            const res = await fetch(`${BACKEND_URL}/api/upload`, { 
+                method: 'POST', 
+                body: formData 
+            });
+            
+            const result = await res.json();
+
+            if (res.ok) {
+                window.location.href = 'seatingplan.html';
+            } else {
+                alert('Upload failed: ' + result.message);
+            }
+        } catch (error) {
+            alert('Error uploading files: ' + error.message);
+        } finally {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = false;
+            btn.textContent = 'Generate Seating Plan';
+        }
     };
   </script>
 </body>

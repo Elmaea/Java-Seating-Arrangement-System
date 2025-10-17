@@ -1,107 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Seating Plan</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Plan - Exam Seating Management</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <h1>Seating Plan</h1>
-  <div class="seating-rooms" id="seatingRooms">Loading...</div>
-  <button id="exportBtn">Export CSV</button>
+    <div class="seating-outer">
+        <div class="seating-header-row">
+            <div class="seating-header-left">
+                <a href="/upload.html" class="back-btn">Back</a>
+            </div>
+            <div class="seating-header-center">
+                <h1 class="seating-title">Seating Plan</h1>
+            </div>
+            <div class="seating-header-right">
+                <button id="exportBtn" class="export-btn">Export Excel</button>
+            </div>
+        </div>
+
+        <div class="seating-rooms" id="seatingRooms">
+            <div class="seating-placeholder">Loading seating arrangement...</div>
+        </div>
+    </div>
 
   <script>
     const BACKEND_URL = 'http://localhost:8080';
+    let allSeatingData = null;
 
     // Fetch seating plan on page load
     window.onload = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/seating`);
-        if (!res.ok) throw new Error('Failed to fetch seating plan');
+        await fetchSeatingPlan();
+        setupSearch();
+    };
 
-        const seating = await res.json();
+    async function fetchSeatingPlan() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/seating`);
+            if (!res.ok) throw new Error('Failed to fetch seating plan');
+
+            const seating = await res.json();
+            allSeatingData = seating; // Store for search functionality
+            renderSeatingPlan(seating);
+        } catch (error) {
+            document.getElementById('seatingRooms').innerHTML = 
+                '<div class="seating-placeholder">No seating plan available</div>';
+            console.error('Error:', error);
+        }
+    }
+
+    function renderSeatingPlan(seating) {
         const container = document.getElementById('seatingRooms');
         container.innerHTML = '';
 
         let roomTitle = '';
         let gridRows = [];
+        
         seating.forEach((line, idx) => {
-          if (line.startsWith('Room:')) {
-            // Render previous room if exists
-            if (roomTitle && gridRows.length) {
-              container.appendChild(renderRoom(roomTitle, gridRows));
+            if (line.startsWith('Room:')) {
+                if (roomTitle && gridRows.length) {
+                    container.appendChild(renderRoom(roomTitle, gridRows));
+                }
+                roomTitle = line;
+                gridRows = [];
+            } else if (line.trim() === '') {
+                if (roomTitle && gridRows.length) {
+                    container.appendChild(renderRoom(roomTitle, gridRows));
+                }
+                roomTitle = '';
+                gridRows = [];
+            } else {
+                gridRows.push(line);
             }
-            roomTitle = line;
-            gridRows = [];
-          } else if (line.trim() === '') {
-            // End of room
-            if (roomTitle && gridRows.length) {
-              container.appendChild(renderRoom(roomTitle, gridRows));
-            }
-            roomTitle = '';
-            gridRows = [];
-          } else {
-            gridRows.push(line);
-          }
         });
-        // Render last room
+
         if (roomTitle && gridRows.length) {
-          container.appendChild(renderRoom(roomTitle, gridRows));
+            container.appendChild(renderRoom(roomTitle, gridRows));
         }
-      } catch (error) {
-        alert('Error: ' + error.message);
-        document.getElementById('seatingRooms').innerHTML = 'No seating plan available.';
-      }
-    };
-
-    function renderRoom(title, rows) {
-      const roomDiv = document.createElement('div');
-      roomDiv.className = 'room-block';
-      const titleDiv = document.createElement('div');
-      titleDiv.className = 'room-title';
-      titleDiv.textContent = title;
-      roomDiv.appendChild(titleDiv);
-
-      const gridDiv = document.createElement('div');
-      gridDiv.className = 'room-grid';
-      const grid = rows.map(r => r.split(' | '));
-      grid.forEach(rowArr => {
-        rowArr.forEach(cell => {
-          const cellDiv = document.createElement('div');
-          cellDiv.className = 'seat-cell';
-          cellDiv.textContent = cell === '-' ? '' : cell;
-          gridDiv.appendChild(cellDiv);
-        });
-      });
-      // Set grid style
-      if (grid.length > 0) {
-        gridDiv.style.display = 'grid';
-        gridDiv.style.gridTemplateRows = `repeat(${grid.length}, 1fr)`;
-        gridDiv.style.gridTemplateColumns = `repeat(${grid[0].length}, 1fr)`;
-      }
-      roomDiv.appendChild(gridDiv);
-      return roomDiv;
     }
 
-    // Export seating plan as CSV
+    function renderRoom(title, rows) {
+        const roomDiv = document.createElement('div');
+        roomDiv.className = 'room-block';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'room-title';
+        titleDiv.textContent = title;
+        roomDiv.appendChild(titleDiv);
+
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'room-grid';
+        const grid = rows.map(r => r.split(' | '));
+        
+        grid.forEach(rowArr => {
+            rowArr.forEach(cell => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'seat-cell';
+                cellDiv.textContent = cell === '-' ? '' : cell;
+                cellDiv.setAttribute('data-content', cell); // For search functionality
+                gridDiv.appendChild(cellDiv);
+            });
+        });
+
+        if (grid.length > 0) {
+            gridDiv.style.gridTemplateRows = `repeat(${grid.length}, 1fr)`;
+            gridDiv.style.gridTemplateColumns = `repeat(${grid[0].length}, 1fr)`;
+        }
+        
+        roomDiv.appendChild(gridDiv);
+        return roomDiv;
+    }
+
+    function setupSearch() {
+        const searchInput = document.getElementById('searchInput');
+        let searchTimeout;
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                if (!searchTerm) {
+                    renderSeatingPlan(allSeatingData);
+                    return;
+                }
+
+                const seats = document.querySelectorAll('.seat-cell');
+                seats.forEach(seat => {
+                    const content = seat.getAttribute('data-content').toLowerCase();
+                    if (content.includes(searchTerm)) {
+                        seat.style.background = '#ffeb3b';
+                    } else {
+                        seat.style.background = '';
+                    }
+                });
+            }, 300);
+        });
+    }
+
+    // Export seating plan as Excel
     document.getElementById('exportBtn').onclick = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/seating`);
-        if (!res.ok) throw new Error('Failed to fetch seating plan');
+        try {
+            const btn = document.getElementById('exportBtn');
+            btn.disabled = true;
+            btn.textContent = 'Exporting...';
 
-        const data = await res.json();
-        const csvContent = "data:text/csv;charset=utf-8," + data.join("\n");
-        const encodedUri = encodeURI(csvContent);
+            const res = await fetch(`${BACKEND_URL}/api/export-excel`);
+            if (!res.ok) throw new Error('Failed to export seating plan');
 
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "SeatingPlan.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (error) {
-        alert('Error exporting CSV: ' + error.message);
-      }
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'SeatingPlan.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            alert('Error exporting Excel file: ' + error.message);
+        } finally {
+            const btn = document.getElementById('exportBtn');
+            btn.disabled = false;
+            btn.textContent = 'Export Excel';
+        }
     };
   </script>
 </body>
