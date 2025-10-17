@@ -46,54 +46,46 @@ public class UploadController {
                 System.out.println("Created directory: " + uploadPath.toAbsolutePath());
             }
 
-            // Validate that required files are not empty
-            if (examFile.isEmpty() || studentFile.isEmpty()) {
-                Map<String,String> res = new HashMap<>();
-                res.put("message", "Please select both Exam.csv and Student.csv files");
-                return ResponseEntity.badRequest().body(res);
-            }
-
-            // Validate file headers
-            if (!validateCsvHeader(examFile, new String[]{"ExamDate", "Subject", "Subject Code", "Department", "YEAR"})) {
-                Map<String,String> res = new HashMap<>();
-                res.put("message", "Invalid Exam.csv format. Please check the file and re-upload.");
-                return ResponseEntity.badRequest().body(res);
-            }
-            if (!validateCsvHeader(studentFile, new String[]{"Rollno", "Dept", "Year"})) {
-                Map<String,String> res = new HashMap<>();
-                res.put("message", "Invalid Student.csv format. Please check the file and re-upload.");
-                return ResponseEntity.badRequest().body(res);
-            }
-            if (classFile != null && !classFile.isEmpty() && !validateCsvHeader(classFile, new String[]{"Class", "Maximum Capacity", "Number of Rows", "Number of Columns"})) {
-                Map<String,String> res = new HashMap<>();
-                res.put("message", "Invalid Class.csv format. Please check the file and re-upload.");
-                return ResponseEntity.badRequest().body(res);
-            }
-
-            // Validate file content for missing data
-            List<String> validationErrors = new ArrayList<>();
-            ValidationResult examValidation = csvValidationService.validate(examFile, 5);
+            // Validate each file's format and contents
+            List<String> allErrors = new ArrayList<>();
+            
+            // Validate Exam file
+            ValidationResult examValidation = csvValidationService.validate(examFile, "exam");
             if (!examValidation.isValid()) {
-                validationErrors.addAll(examValidation.getErrors());
+                allErrors.add("Exam file errors:");
+                allErrors.addAll(examValidation.getErrors().stream()
+                    .map(error -> "  - " + error)
+                    .collect(Collectors.toList()));
             }
 
-            ValidationResult studentValidation = csvValidationService.validate(studentFile, 3);
+            // Validate Student file
+            ValidationResult studentValidation = csvValidationService.validate(studentFile, "student");
             if (!studentValidation.isValid()) {
-                validationErrors.addAll(studentValidation.getErrors());
+                allErrors.add("Student file errors:");
+                allErrors.addAll(studentValidation.getErrors().stream()
+                    .map(error -> "  - " + error)
+                    .collect(Collectors.toList()));
             }
 
+            // Validate Class file if provided
             if (classFile != null && !classFile.isEmpty()) {
-                ValidationResult classValidation = csvValidationService.validate(classFile, 4);
+                ValidationResult classValidation = csvValidationService.validate(classFile, "class");
                 if (!classValidation.isValid()) {
-                    validationErrors.addAll(classValidation.getErrors());
+                    allErrors.add("Class file errors:");
+                    allErrors.addAll(classValidation.getErrors().stream()
+                        .map(error -> "  - " + error)
+                        .collect(Collectors.toList()));
                 }
             }
 
-            if (!validationErrors.isEmpty()) {
-                Map<String, String> res = new HashMap<>();
-                res.put("message", validationErrors.stream().collect(Collectors.joining("\n")));
-                return ResponseEntity.badRequest().body(res);
+            // If there are any validation errors, return them
+            if (!allErrors.isEmpty()) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", String.join("\n", allErrors));
+                return ResponseEntity.badRequest().body(response);
             }
+
+            // If all validations pass, proceed with file saving
 
             // Get file paths
             Path examPath = uploadPath.resolve("Exam.csv");

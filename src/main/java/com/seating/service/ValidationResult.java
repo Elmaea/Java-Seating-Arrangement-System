@@ -3,6 +3,9 @@ package com.seating.service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the result of a validation operation
+ */
 public class ValidationResult {
     private final boolean isValid;
     private final List<String> errors;

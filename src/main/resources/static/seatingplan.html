@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seating Plan - Exam Seating Management</title>
     <link rel="stylesheet" href="/style.css">
+    <script src="/js/logout.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%);
@@ -23,6 +24,7 @@
             </div>
             <div class="seating-header-right">
                 <button id="exportBtn" class="export-btn">Export Excel</button>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
             </div>
         </div>
 
@@ -172,6 +174,10 @@
             btn.textContent = 'Export Excel';
         }
     };
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        window.location.href = '/login.html';
+    });
   </script>
 </body>
 </html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Files - Exam Seating Management</title>
     <link rel="stylesheet" href="/style.css">
+    <script src="/js/logout.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%);
@@ -13,6 +14,10 @@
     </style>
 </head>
 <body>
+    <div class="header-actions">
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+    </div>
+
     <div class="upload-outer">
         <h1 class="upload-title">Upload Data Files</h1>
         <p class="upload-sub">Please upload the required CSV files to generate the seating plan</p>
@@ -114,6 +119,10 @@
             btn.textContent = 'Generate Seating Plan';
         }
     };
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        window.location.href = '/login.html';
+    });
   </script>
 </body>
 </html>

@@ -1,3 +1,20 @@
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  background-color: #4a5568;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #2d3748;
+}
 
 .seating-rooms {
   display: flex;
@@ -378,9 +395,35 @@
   font-size: 0.98rem;
   text-align: center;
 }
+.logout-btn {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  background: #e57373; /* Softer red for logout */
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+  margin-left: 12px;
+}
+
+.logout-btn:hover {
+  background: #ef5350;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 83, 80, 0.25);
+}
+
+.upload-outer .header-actions {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
+  margin: 0;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
