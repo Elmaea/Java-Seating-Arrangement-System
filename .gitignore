@@ -31,5 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+<<<<<<< Updated upstream
 
 src/main/resources/application.properties
+=======
+src/main/resources/application.properties
+>>>>>>> Stashed changes
