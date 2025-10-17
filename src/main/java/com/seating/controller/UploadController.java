@@ -43,6 +43,23 @@ public class UploadController {
                 return ResponseEntity.badRequest().body(res);
             }
 
+            // Validate file headers
+            if (!validateCsvHeader(examFile, new String[]{"ExamDate", "Subject", "Subject Code", "Department", "YEAR"})) {
+                Map<String,String> res = new HashMap<>();
+                res.put("message", "Invalid Exam.csv format. Please check the file and re-upload.");
+                return ResponseEntity.badRequest().body(res);
+            }
+            if (!validateCsvHeader(studentFile, new String[]{"Rollno", "Dept", "Year"})) {
+                Map<String,String> res = new HashMap<>();
+                res.put("message", "Invalid Student.csv format. Please check the file and re-upload.");
+                return ResponseEntity.badRequest().body(res);
+            }
+            if (classFile != null && !classFile.isEmpty() && !validateCsvHeader(classFile, new String[]{"Class", "Maximum Capacity", "Number of Rows", "Number of Columns"})) {
+                Map<String,String> res = new HashMap<>();
+                res.put("message", "Invalid Class.csv format. Please check the file and re-upload.");
+                return ResponseEntity.badRequest().body(res);
+            }
+
             // Get file paths
             Path examPath = uploadPath.resolve("Exam.csv");
             Path studentPath = uploadPath.resolve("Student.csv");
@@ -90,5 +107,37 @@ public class UploadController {
         response.put("canWrite", String.valueOf(uploadDir.canWrite()));
         
         return response;
+    }
+
+    private boolean validateCsvHeader(MultipartFile file, String[] expectedHeaders) {
+        if (file.isEmpty()) {
+            return true; // Or false, depending on whether empty files are allowed
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
+                return false; // File is empty or not readable
+            }
+
+            // Remove BOM if present (often added by Excel)
+            if (headerLine.startsWith("\uFEFF")) {
+                headerLine = headerLine.substring(1);
+            }
+
+            String[] headers = headerLine.trim().split(",");
+            if (headers.length != expectedHeaders.length) {
+                return false; // Different number of columns
+            }
+
+            for (int i = 0; i < expectedHeaders.length; i++) {
+                if (!headers[i].trim().equalsIgnoreCase(expectedHeaders[i].trim())) {
+                    return false; // Header names don't match
+                }
+            }
+            return true; // Headers match
+        } catch (IOException e) {
+            System.err.println("Error reading file for validation: " + e.getMessage());
+            return false;
+        }
     }
 }
