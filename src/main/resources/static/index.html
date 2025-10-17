@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Seating Arrangement System</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        /* Landing page specific styles */
+        body { 
+            margin: 0; 
+            background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%);
+            min-height: 100vh;
+        }
+        
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(111, 142, 83, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(111, 142, 83, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.6); }
+        }
+        
+        /* Header/Navbar */
+        header {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 246, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(111, 142, 83, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(43, 59, 46, 0.08);
+            animation: slideInDown 0.6s ease;
+        }
+        
+        .navbar {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .navbar-brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #2b3b2e;
+            text-decoration: none;
+            background: linear-gradient(135deg, #6f8e53, #87a96b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .navbar-login {
+            background: linear-gradient(135deg, #87a96b, #6f8e53);
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform .12s, box-shadow .12s, filter .12s;
+            box-shadow: 0 4px 15px rgba(111, 142, 83, 0.25);
+            font-size: 0.95rem;
+        }
+        
+        .navbar-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(111, 142, 83, 0.35);
+            filter: brightness(1.08);
+        }
+        
+        /* Hero Section */
+        .hero {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 80px 24px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(180deg, rgba(111, 142, 83, 0.06) 0%, rgba(246, 250, 246, 0.5) 100%);
+            border-radius: 24px;
+            margin: 50px auto 40px;
+            box-shadow: 0 4px 24px rgba(111, 142, 83, 0.06);
+            animation: fadeInUp 0.8s ease 0.2s backwards;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #2b3b2e;
+            margin: 0 0 12px 0;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+        
+        .hero p {
+            font-size: 1.15rem;
+            color: #5a6a5a;
+            margin: 0;
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        
+        /* Features Section */
+        .features-section {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbf9 50%, #ffffff 100%);
+            padding: 80px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .features-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #2b3b2e;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.05rem;
+            color: #6a7a6a;
+            margin-bottom: 50px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 500;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 246, 0.8) 100%);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 16px rgba(43, 59, 46, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+            transition: transform .15s, box-shadow .15s;
+            text-align: left;
+            border: 1px solid rgba(111, 142, 83, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(111, 142, 83, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+        }
+        
+        .feature-card-icon {
+            font-size: 2.4rem;
+            margin-bottom: 16px;
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #87a96b, #9fc495);
+            box-shadow: 0 4px 12px rgba(111, 142, 83, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+            transition: transform .15s, box-shadow .15s;
+        }
+        
+        .feature-card:hover .feature-card-icon {
+            transform: scale(1.08) translateY(-2px);
+        }
+        
+        /* Accent colors for each feature card */
+        .feature-card:nth-child(1) .feature-card-icon {
+            background: linear-gradient(135deg, #87a96b, #9fc495);
+            box-shadow: 0 4px 12px rgba(111, 142, 83, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(2) .feature-card-icon {
+            background: linear-gradient(135deg, #7db4e3, #94c1e8);
+            box-shadow: 0 4px 12px rgba(125, 180, 227, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(3) .feature-card-icon {
+            background: linear-gradient(135deg, #579665, #6aa579);
+            box-shadow: 0 4px 12px rgba(87, 150, 101, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(4) .feature-card-icon {
+            background: linear-gradient(135deg, #d4967d, #e0a89c);
+            box-shadow: 0 4px 12px rgba(212, 150, 125, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(5) .feature-card-icon {
+            background: linear-gradient(135deg, #6aa5de, #7db4e3);
+            box-shadow: 0 4px 12px rgba(106, 165, 222, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(6) .feature-card-icon {
+            background: linear-gradient(135deg, #88b475, #9dc18d);
+            box-shadow: 0 4px 12px rgba(136, 180, 117, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(7) .feature-card-icon {
+            background: linear-gradient(135deg, #c4a6a3, #d4967d);
+            box-shadow: 0 4px 12px rgba(196, 166, 163, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card:nth-child(8) .feature-card-icon {
+            background: linear-gradient(135deg, #7db4e3, #6aa5de);
+            box-shadow: 0 4px 12px rgba(125, 180, 227, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2b3b2e;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.2px;
+        }
+        
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #6a7a6a;
+            margin: 0;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #2b3b2e 0%, #1f2d22 100%);
+            color: #f0f5f0;
+            padding: 48px 24px;
+            margin-top: 60px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 -4px 16px rgba(43, 59, 46, 0.08);
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+        
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .footer-content p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 980px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 16px;
+            }
+        }
+        
+        @media (max-width: 760px) {
+            .navbar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px 16px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .hero {
+                padding: 60px 16px;
+                margin: 40px auto 30px;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 0.95rem;
+            }
+            
+            .features-section {
+                padding: 60px 16px;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+                margin-bottom: 12px;
+            }
+            
+            .section-subtitle {
+                margin-bottom: 40px;
+                font-size: 0.95rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .feature-card {
+                padding: 20px;
+            }
+            
+            .feature-card h3 {
+                font-size: 1.05rem;
+            }
+            
+            .feature-card p {
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 420px) {
+            .navbar-brand {
+                font-size: 0.95rem;
+            }
+            
+            .navbar-login {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            
+            .hero {
+                padding: 40px 12px;
+                margin: 30px auto 20px;
+            }
+            
+            .hero h1 {
+                font-size: 1.6rem;
+            }
+            
+            .hero p {
+                font-size: 0.85rem;
+            }
+            
+            .features-section {
+                padding: 40px 12px;
+            }
+            
+            .section-title {
+                font-size: 1.35rem;
+                margin-bottom: 8px;
+            }
+            
+            .section-subtitle {
+                margin-bottom: 30px;
+                font-size: 0.85rem;
+            }
+            
+            .feature-card {
+                padding: 16px;
+            }
+            
+            .feature-card-icon {
+                font-size: 2rem;
+                padding: 10px 14px;
+            }
+            
+            .feature-card h3 {
+                font-size: 0.95rem;
+            }
+            
+            .feature-card p {
+                font-size: 0.8rem;
+            }
+            
+            footer {
+                padding: 30px 12px;
+                margin-top: 40px;
+            }
+            
+            .footer-content p {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header/Navbar -->
+    <header>
+        <div class="navbar">
+            <div class="navbar-brand"></div>
+            <a href="/login.html" class="navbar-login">Admin Login</a>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Exam Seating Arrangement</h1>
+        <p>A comprehensive solution for managing and organizing exam seating arrangements with efficiency and precision</p>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-container">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-subtitle">Everything needed to manage exam seating efficiently and fairly</p>
+            
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">📊</div>
+                    <h3>Student Management</h3>
+                    <p>Efficiently organize and manage student data for exam allocation with ease.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">🪑</div>
+                    <h3>Smart Seating</h3>
+                    <p>Automated seating arrangement based on departments and regulations.</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">🏛️</div>
+                    <h3>Hall Assignment</h3>
+                    <p>Intelligent room and hall allocation for optimal space utilization.</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">🔒</div>
+                    <h3>Secure System</h3>
+                    <p>Role-based access control for administrators and staff.</p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">⚡</div>
+                    <h3>Quick Generation</h3>
+                    <p>Generate seating plans instantly for any examination event.</p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">📋</div>
+                    <h3>Multiple Exams</h3>
+                    <p>Handle multiple concurrent exams with seamless coordination.</p>
+                </div>
+                
+                <!-- Feature 7 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">📈</div>
+                    <h3>Data Import</h3>
+                    <p>Import student and exam data from CSV files with validation.</p>
+                </div>
+                
+                <!-- Feature 8 -->
+                <div class="feature-card">
+                    <div class="feature-card-icon">📥</div>
+                    <h3>Export Reports</h3>
+                    <p>Export seating plans as professional Excel reports instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p><strong>Exam Seating Arrangement System</strong></p>
+            <p>Built for educational institutions | Streamline your examination process</p>
+            <p style="font-size: 0.85rem; margin-top: 16px; opacity: 0.7;">© 2025 All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Entrance animations
+        const cards = document.querySelectorAll('.feature-card');
+        cards.forEach((card, index) => {
+            card.style.animation = `fadeInUp 0.6s ease ${0.3 + (index * 0.08)}s backwards`;
+        });
+    </script>
+</body>
+</html>

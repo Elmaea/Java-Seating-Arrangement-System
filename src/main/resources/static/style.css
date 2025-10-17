@@ -7,9 +7,11 @@
   margin-top: 32px;
 }
 .room-block {
-  background: #fff;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 246, 0.9) 100%);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(80,80,160,0.08);
+  box-shadow: 0 4px 16px rgba(111, 142, 83, 0.08);
+  border: 1px solid rgba(111, 142, 83, 0.1);
   padding: 24px 32px 32px 32px;
   margin-bottom: 16px;
   min-width: 320px;
@@ -102,25 +104,27 @@
   padding: 10px 22px;
   border: none;
   border-radius: 8px;
-  background:  hsl(205, 92%, 61%);
+  background: linear-gradient(135deg, #87a96b, #6f8e53);
   color: #fff;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
 }
 .back-btn:hover, .export-btn:hover {
-  background: #000000;
+  background: linear-gradient(135deg, #6f8e53, #56703f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(111, 142, 83, 0.25);
 }
 .export-btn {
-  background: hsl(205, 92%, 61%);
+  background: linear-gradient(135deg, #87a96b, #6f8e53);
   color: #fff;
   font-weight: bold;
   margin-left: 18px;
-  box-shadow: 0 2px 8px rgba(56,217,150,0.08);
+  box-shadow: 0 2px 8px rgba(111, 142, 83, 0.15);
 }
 .export-btn:hover {
-  background: #000000;
+  background: linear-gradient(135deg, #6f8e53, #56703f);
 }
 .seating-search-row {
   width: 100%;
@@ -173,9 +177,11 @@
   justify-content: center;
 }
 .upload-card {
-  background: #fff;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 246, 0.9) 100%);
+  backdrop-filter: blur(10px);
   border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(80, 80, 160, 0.10);
+  box-shadow: 0 4px 16px rgba(111, 142, 83, 0.08);
+  border: 1px solid rgba(111, 142, 83, 0.1);
   padding: 28px 32px 24px 32px;
   min-width: 320px;
   max-width: 95vw;
@@ -183,6 +189,11 @@
   flex-direction: column;
   align-items: center;
   margin-bottom: 12px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.upload-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(111, 142, 83, 0.12);
 }
 .upload-card-title {
   font-size: 1.3rem;
@@ -221,16 +232,18 @@
   padding: 14px 38px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(90deg, #3b5bdb 0%, #b197fc 100%);
+  background: linear-gradient(135deg, #87a96b, #6f8e53);
   color: #fff;
   font-size: 1.15rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: 0 2px 8px rgba(80, 80, 160, 0.08);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 12px rgba(111, 142, 83, 0.2);
 }
 .generate-btn:hover {
-  background: linear-gradient(90deg, #364fc7 0%, #9775fa 100%);
+  background: linear-gradient(135deg, #6f8e53, #56703f);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(111, 142, 83, 0.3);
 }
 
 .login-outer {
@@ -275,9 +288,11 @@
   margin-bottom: 10px;
 }
 .login-card {
-  background: #fff;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 246, 0.9) 100%);
+  backdrop-filter: blur(10px);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(80, 80, 160, 0.10);
+  box-shadow: 0 4px 16px rgba(111, 142, 83, 0.12);
+  border: 1px solid rgba(111, 142, 83, 0.1);
   padding: 36px 32px 24px 32px;
   min-width: 340px;
   max-width: 95vw;
@@ -344,15 +359,18 @@
   padding: 12px 0;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(90deg, #3b5bdb 0%, #b197fc 100%);
+  background: linear-gradient(135deg, #87a96b, #6f8e53);
   color: #fff;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(111, 142, 83, 0.15);
 }
 .login-btn:hover {
-  background: linear-gradient(90deg, #364fc7 0%, #9775fa 100%);
+  background: linear-gradient(135deg, #6f8e53, #56703f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(111, 142, 83, 0.25);
 }
 .demo-creds {
   margin-top: 18px;
