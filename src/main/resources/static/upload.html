@@ -14,6 +14,9 @@
     <label>Student List:
       <input type="file" id="student-csv" accept=".csv">
     </label>
+    <label>Class/Room Details:
+      <input type="file" id="class-csv" accept=".csv">
+    </label>
     <button id="generateBtn">Generate Seating Plan</button>
   </div>
 
@@ -23,15 +26,17 @@
     document.getElementById('generateBtn').onclick = async function() {
       const examFile = document.getElementById('exam-csv').files[0];
       const studentFile = document.getElementById('student-csv').files[0];
+      const classFile = document.getElementById('class-csv').files[0];
 
-      if (!examFile || !studentFile) {
-        alert('Upload both CSV files!');
+      if (!examFile || !studentFile || !classFile) {
+        alert('Upload all three CSV files!');
         return;
       }
 
       const formData = new FormData();
       formData.append('examFile', examFile);
       formData.append('studentFile', studentFile);
+      formData.append('classFile', classFile);
 
       try {
         const res = await fetch(`${BACKEND_URL}/api/upload`, { method: 'POST', body: formData });

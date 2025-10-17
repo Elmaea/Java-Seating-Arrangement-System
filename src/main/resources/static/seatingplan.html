@@ -7,7 +7,7 @@
 </head>
 <body>
   <h1>Seating Plan</h1>
-  <div class="seating-placeholder">Loading...</div>
+  <div class="seating-rooms" id="seatingRooms">Loading...</div>
   <button id="exportBtn">Export CSV</button>
 
   <script>
@@ -20,13 +20,68 @@
         if (!res.ok) throw new Error('Failed to fetch seating plan');
 
         const seating = await res.json();
-        const container = document.querySelector('.seating-placeholder');
-        container.innerHTML = seating.map(row => `<div>${row}</div>`).join('');
+        const container = document.getElementById('seatingRooms');
+        container.innerHTML = '';
+
+        let roomTitle = '';
+        let gridRows = [];
+        seating.forEach((line, idx) => {
+          if (line.startsWith('Room:')) {
+            // Render previous room if exists
+            if (roomTitle && gridRows.length) {
+              container.appendChild(renderRoom(roomTitle, gridRows));
+            }
+            roomTitle = line;
+            gridRows = [];
+          } else if (line.trim() === '') {
+            // End of room
+            if (roomTitle && gridRows.length) {
+              container.appendChild(renderRoom(roomTitle, gridRows));
+            }
+            roomTitle = '';
+            gridRows = [];
+          } else {
+            gridRows.push(line);
+          }
+        });
+        // Render last room
+        if (roomTitle && gridRows.length) {
+          container.appendChild(renderRoom(roomTitle, gridRows));
+        }
       } catch (error) {
         alert('Error: ' + error.message);
-        document.querySelector('.seating-placeholder').innerHTML = 'No seating plan available.';
+        document.getElementById('seatingRooms').innerHTML = 'No seating plan available.';
       }
     };
+
+    function renderRoom(title, rows) {
+      const roomDiv = document.createElement('div');
+      roomDiv.className = 'room-block';
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'room-title';
+      titleDiv.textContent = title;
+      roomDiv.appendChild(titleDiv);
+
+      const gridDiv = document.createElement('div');
+      gridDiv.className = 'room-grid';
+      const grid = rows.map(r => r.split(' | '));
+      grid.forEach(rowArr => {
+        rowArr.forEach(cell => {
+          const cellDiv = document.createElement('div');
+          cellDiv.className = 'seat-cell';
+          cellDiv.textContent = cell === '-' ? '' : cell;
+          gridDiv.appendChild(cellDiv);
+        });
+      });
+      // Set grid style
+      if (grid.length > 0) {
+        gridDiv.style.display = 'grid';
+        gridDiv.style.gridTemplateRows = `repeat(${grid.length}, 1fr)`;
+        gridDiv.style.gridTemplateColumns = `repeat(${grid[0].length}, 1fr)`;
+      }
+      roomDiv.appendChild(gridDiv);
+      return roomDiv;
+    }
 
     // Export seating plan as CSV
     document.getElementById('exportBtn').onclick = async () => {
