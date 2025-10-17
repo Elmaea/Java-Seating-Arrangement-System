@@ -1,22 +1,32 @@
 package com.seating.controller;
 
+import com.seating.service.CsvValidationService;
+import com.seating.service.ValidationResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class UploadController {
 
+    private final CsvValidationService csvValidationService;
+
     // Use absolute path to your project's uploads directory
     private final String UPLOAD_DIR;
 
-    public UploadController() {
+    @Autowired
+    public UploadController(CsvValidationService csvValidationService) {
+        this.csvValidationService = csvValidationService;
         // Get the absolute path to your project directory
         String projectPath = System.getProperty("user.dir");
         this.UPLOAD_DIR = projectPath + File.separator + "uploads" + File.separator;
@@ -57,6 +67,31 @@ public class UploadController {
             if (classFile != null && !classFile.isEmpty() && !validateCsvHeader(classFile, new String[]{"Class", "Maximum Capacity", "Number of Rows", "Number of Columns"})) {
                 Map<String,String> res = new HashMap<>();
                 res.put("message", "Invalid Class.csv format. Please check the file and re-upload.");
+                return ResponseEntity.badRequest().body(res);
+            }
+
+            // Validate file content for missing data
+            List<String> validationErrors = new ArrayList<>();
+            ValidationResult examValidation = csvValidationService.validate(examFile, 5);
+            if (!examValidation.isValid()) {
+                validationErrors.addAll(examValidation.getErrors());
+            }
+
+            ValidationResult studentValidation = csvValidationService.validate(studentFile, 3);
+            if (!studentValidation.isValid()) {
+                validationErrors.addAll(studentValidation.getErrors());
+            }
+
+            if (classFile != null && !classFile.isEmpty()) {
+                ValidationResult classValidation = csvValidationService.validate(classFile, 4);
+                if (!classValidation.isValid()) {
+                    validationErrors.addAll(classValidation.getErrors());
+                }
+            }
+
+            if (!validationErrors.isEmpty()) {
+                Map<String, String> res = new HashMap<>();
+                res.put("message", validationErrors.stream().collect(Collectors.joining("\n")));
                 return ResponseEntity.badRequest().body(res);
             }
 
