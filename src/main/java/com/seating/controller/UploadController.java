@@ -122,6 +122,60 @@ public class UploadController {
         }
     }
 
+    @PostMapping("/dept/upload")
+        public ResponseEntity<Map<String,String>> deptUpload(
+            jakarta.servlet.http.HttpSession session,
+            @RequestParam("studentFile") MultipartFile studentFile) {
+        Map<String,String> res = new HashMap<>();
+        try {
+            // validate
+            ValidationResult studentValidation = csvValidationService.validate(studentFile, "student");
+            if (!studentValidation.isValid()) {
+                res.put("error", String.join("\n", studentValidation.getErrors()));
+                return ResponseEntity.badRequest().body(res);
+            }
+
+            String deptName = (String) session.getAttribute("deptName");
+            if (deptName == null) {
+                res.put("error", "Not authenticated as a department");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
+            }
+
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+            if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+
+            // Save department copy
+            Path deptPath = uploadPath.resolve("Student_" + deptName + ".csv");
+            studentFile.transferTo(deptPath.toFile());
+
+            // Append rows (excluding header) to master Student.csv
+            Path master = uploadPath.resolve("Student.csv");
+            boolean masterExists = Files.exists(master);
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(studentFile.getInputStream()));
+                 BufferedWriter w = Files.newBufferedWriter(master, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND)) {
+                String header = r.readLine();
+                String line;
+                // If master didn't exist, write header first
+                if (!masterExists && header != null) {
+                    w.write(header);
+                    w.newLine();
+                }
+                while ((line = r.readLine()) != null) {
+                    if (line.trim().isEmpty()) continue;
+                    w.write(line);
+                    w.newLine();
+                }
+            }
+
+            res.put("message", "Department file uploaded and merged into master Student.csv");
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            e.printStackTrace();
+            res.put("message", "Upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+        }
+    }
+
     // Add a test endpoint to check the upload directory
     @GetMapping("/test-upload-dir")
     public Map<String, String> testUploadDir() {

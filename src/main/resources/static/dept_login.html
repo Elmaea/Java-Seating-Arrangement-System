@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dept Login - Exam Seating Arrangement</title>
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <style>
+        body { background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%); min-height:100vh; }
+    </style>
+</head>
+<body>
+    <div class="login-outer">
+        <div class="login-header">
+            <h1 class="portal-title">Exam Seating Management</h1>
+            <p class="portal-sub">Department Portal</p>
+        </div>
+        <div class="login-card">
+            <h2>Department Login</h2>
+            <p class="login-desc">Sign in with your department credentials</p>
+            <form id="loginForm" action="/dept/login" method="post">
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="login-btn">Sign In</button>
+            </form>
+            <div id="error-msg" style="color: #dc3545; margin-top: 10px; text-align: center;"></div>
+        </div>
+    </div>
+
+</body>
+</html>

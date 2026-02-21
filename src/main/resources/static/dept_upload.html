@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dept Upload - Exam Seating</title>
+  <link rel="stylesheet" href="/style.css">
+  <style> .upload-card { min-width: 420px; }</style>
+</head>
+<body>
+  <div class="upload-outer">
+    <div class="upload-title">Upload Student CSV</div>
+    <div class="upload-sub">Upload your department's student list (CSV). The system will append these students into the master Student list.</div>
+
+    <div class="upload-cards">
+      <div class="upload-card">
+        <div class="upload-card-title">Department Student CSV</div>
+        <div class="upload-card-desc">Select the CSV file that contains Rollno,Dept,Year columns.</div>
+        <form id="deptUploadForm" enctype="multipart/form-data">
+          <input type="file" id="studentFile" name="studentFile" accept=".csv" required><br><br>
+          <button type="submit" class="generate-btn">Upload</button>
+        </form>
+        <div id="uploadResult" style="margin-top:12px;color:#2a5; font-weight:600"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('deptUploadForm');
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const f = document.getElementById('studentFile').files[0];
+      if (!f) return alert('Select a file');
+      const fd = new FormData();
+      fd.append('studentFile', f);
+      const res = await fetch('/api/dept/upload', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (res.ok) {
+        document.getElementById('uploadResult').textContent = json.message || 'Uploaded';
+      } else {
+        document.getElementById('uploadResult').textContent = json.error || json.message || 'Upload failed';
+        document.getElementById('uploadResult').style.color = '#d33';
+      }
+    });
+  </script>
+</body>
+</html>
