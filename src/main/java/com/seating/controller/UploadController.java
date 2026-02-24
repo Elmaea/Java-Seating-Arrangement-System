@@ -1,6 +1,7 @@
 package com.seating.controller;
 
 import com.seating.service.CsvValidationService;
+import com.seating.service.StudentService;
 import com.seating.service.ValidationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -20,13 +21,15 @@ import java.util.stream.Collectors;
 public class UploadController {
 
     private final CsvValidationService csvValidationService;
+    private final StudentService studentService;
 
     // Use absolute path to your project's uploads directory
     private final String UPLOAD_DIR;
 
     @Autowired
-    public UploadController(CsvValidationService csvValidationService) {
+    public UploadController(CsvValidationService csvValidationService, StudentService studentService) {
         this.csvValidationService = csvValidationService;
+        this.studentService = studentService;
         // Get the absolute path to your project directory
         String projectPath = System.getProperty("user.dir");
         this.UPLOAD_DIR = projectPath + File.separator + "uploads" + File.separator;
@@ -123,55 +126,55 @@ public class UploadController {
     }
 
     @PostMapping("/dept/upload")
-        public ResponseEntity<Map<String,String>> deptUpload(
+    public ResponseEntity<Map<String,String>> deptUpload(
             jakarta.servlet.http.HttpSession session,
             @RequestParam("studentFile") MultipartFile studentFile) {
         Map<String,String> res = new HashMap<>();
         try {
-            // validate
+            // Validate CSV format and structure
             ValidationResult studentValidation = csvValidationService.validate(studentFile, "student");
             if (!studentValidation.isValid()) {
                 res.put("error", String.join("\n", studentValidation.getErrors()));
                 return ResponseEntity.badRequest().body(res);
             }
 
+            // Get department name from session
             String deptName = (String) session.getAttribute("deptName");
             if (deptName == null) {
                 res.put("error", "Not authenticated as a department");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
             }
 
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+            // Upload and save students to database
+            // This will delete old records for this department and insert new ones
+            int recordsSaved = studentService.uploadAndSaveStudents(studentFile, deptName);
 
-            // Save department copy
+            // Optionally save a backup copy of the department's CSV file
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
             Path deptPath = uploadPath.resolve("Student_" + deptName + ".csv");
             studentFile.transferTo(deptPath.toFile());
-
-            // Append rows (excluding header) to master Student.csv
-            Path master = uploadPath.resolve("Student.csv");
-            boolean masterExists = Files.exists(master);
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(studentFile.getInputStream()));
-                 BufferedWriter w = Files.newBufferedWriter(master, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND)) {
-                String header = r.readLine();
-                String line;
-                // If master didn't exist, write header first
-                if (!masterExists && header != null) {
-                    w.write(header);
-                    w.newLine();
-                }
-                while ((line = r.readLine()) != null) {
-                    if (line.trim().isEmpty()) continue;
-                    w.write(line);
-                    w.newLine();
-                }
-            }
-
-            res.put("message", "Department file uploaded and merged into master Student.csv");
+            
+            System.out.println("Department '" + deptName + "' uploaded " + recordsSaved + " student records");
+            
+            res.put("message", "Successfully uploaded " + recordsSaved + " student records for " + deptName);
             return ResponseEntity.ok(res);
-        } catch (Exception e) {
+        } catch (IOException e) {
+            System.err.println("IO Error during department upload: " + e.getMessage());
             e.printStackTrace();
-            res.put("message", "Upload failed: " + e.getMessage());
+            res.put("error", "Upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Validation Error during department upload: " + e.getMessage());
+            res.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(res);
+        } catch (Exception e) {
+            System.err.println("Unexpected error during department upload: " + e.getMessage());
+            e.printStackTrace();
+            res.put("error", "Upload failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
         }
     }

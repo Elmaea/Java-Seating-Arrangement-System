@@ -5,12 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dept Upload - Exam Seating</title>
   <link rel="stylesheet" href="/style.css">
-  <style> .upload-card { min-width: 420px; }</style>
+  <style> 
+    .upload-card { min-width: 420px; }
+    
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%);
+      border-bottom: 2px solid #a8c780;
+    }
+    
+    .dept-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    
+    .dept-badge {
+      background: linear-gradient(135deg, #6a82fb 0%, #4c5fcc 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(106, 130, 251, 0.3);
+    }
+    
+    .logout-btn {
+      background: #d33;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    
+    .logout-btn:hover {
+      background: #c00;
+    }
+  </style>
 </head>
 <body>
+  <div class="header-actions">
+    <div class="dept-info">
+      <span>Logged in as:</span>
+      <div id="deptBadge" class="dept-badge">Loading...</div>
+    </div>
+    <button id="deptLogoutBtn" class="logout-btn">Logout</button>
+  </div>
+
   <div class="upload-outer">
     <div class="upload-title">Upload Student CSV</div>
-    <div class="upload-sub">Upload your department's student list (CSV). The system will append these students into the master Student list.</div>
+    <div class="upload-sub">Upload your department's student list (CSV). The system will replace any existing records for your department.</div>
 
     <div class="upload-cards">
       <div class="upload-card">
@@ -26,6 +76,41 @@
   </div>
 
   <script>
+    // Fetch and display department info
+    async function loadDeptInfo() {
+      try {
+        const response = await fetch('/api/dept/info');
+        const data = await response.json();
+        
+        if (data.authenticated === 'true') {
+          document.getElementById('deptBadge').textContent = data.deptName || 'Department';
+        } else {
+          // Redirect to login if not authenticated
+          window.location.href = '/dept_login.html';
+        }
+      } catch (error) {
+        console.error('Error loading department info:', error);
+        window.location.href = '/dept_login.html';
+      }
+    }
+
+    // Handle logout
+    document.getElementById('deptLogoutBtn').addEventListener('click', async function() {
+      try {
+        const response = await fetch('/api/dept/logout', { method: 'POST' });
+        if (response.ok) {
+          window.location.href = '/dept_login.html';
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = '/dept_login.html';
+      }
+    });
+
+    // Load department info on page load
+    document.addEventListener('DOMContentLoaded', loadDeptInfo);
+
+    // Handle file upload
     const form = document.getElementById('deptUploadForm');
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -33,12 +118,21 @@
       if (!f) return alert('Select a file');
       const fd = new FormData();
       fd.append('studentFile', f);
-      const res = await fetch('/api/dept/upload', { method: 'POST', body: fd });
-      const json = await res.json();
-      if (res.ok) {
-        document.getElementById('uploadResult').textContent = json.message || 'Uploaded';
-      } else {
-        document.getElementById('uploadResult').textContent = json.error || json.message || 'Upload failed';
+      
+      try {
+        const res = await fetch('/api/dept/upload', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (res.ok) {
+          document.getElementById('uploadResult').textContent = json.message || 'Uploaded successfully';
+          document.getElementById('uploadResult').style.color = '#2a5';
+          document.getElementById('studentFile').value = '';
+        } else {
+          document.getElementById('uploadResult').textContent = json.error || json.message || 'Upload failed';
+          document.getElementById('uploadResult').style.color = '#d33';
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        document.getElementById('uploadResult').textContent = 'Upload failed. Please try again.';
         document.getElementById('uploadResult').style.color = '#d33';
       }
     });

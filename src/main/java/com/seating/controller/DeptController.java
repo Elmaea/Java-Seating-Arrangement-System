@@ -3,11 +3,16 @@ package com.seating.controller;
 import com.seating.entity.Dept;
 import com.seating.repository.DeptRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class DeptController {
@@ -48,7 +53,7 @@ public class DeptController {
                             @RequestParam String email,
                             @RequestParam String password,
                             RedirectAttributes ra,
-                            jakarta.servlet.http.HttpSession session) {
+                            HttpSession session) {
         Dept dept = deptRepository.findByEmail(email);
         if (dept == null || !dept.getPassword().equals(password)) {
             ra.addFlashAttribute("error", "Invalid credentials");
@@ -69,5 +74,37 @@ public class DeptController {
         session.setAttribute("deptName", dept.getDeptName());
         // On successful login redirect to dept upload page
         return "redirect:/dept_upload.html";
+    }
+
+    /**
+     * REST API endpoint to get the currently logged-in department info
+     */
+    @GetMapping("/api/dept/info")
+    public ResponseEntity<Map<String, String>> getDeptInfo(HttpSession session) {
+        Map<String, String> response = new HashMap<>();
+        
+        String deptName = (String) session.getAttribute("deptName");
+        String deptEmail = (String) session.getAttribute("deptEmail");
+        
+        if (deptName == null || deptEmail == null) {
+            response.put("authenticated", "false");
+            return ResponseEntity.ok(response);
+        }
+        
+        response.put("authenticated", "true");
+        response.put("deptName", deptName);
+        response.put("deptEmail", deptEmail);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * REST API endpoint to logout the department
+     */
+    @PostMapping("/api/dept/logout")
+    public ResponseEntity<Map<String, String>> deptLogout(HttpSession session) {
+        session.invalidate();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Logged out successfully");
+        return ResponseEntity.ok(response);
     }
 }
