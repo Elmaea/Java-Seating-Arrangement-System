@@ -6,42 +6,33 @@ import com.seating.model.Exam;
 import com.seating.util.StudentReader;
 import com.seating.util.ExamReader;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.util.*;
-
 @Service
 public class SeatingService {
-
     public List<String> generateSeatingPlan(File studentFile, File examFile, File classFile) {
         List<Student> students = StudentReader.readStudentsFromCSV(studentFile.getPath());
         return generateSeatingPlan(students, examFile, classFile);
     }
-
     public List<String> generateSeatingPlan(List<Student> students, File examFile, File classFile) {
         List<Exam> exams = ExamReader.readExamsFromCSV(examFile.getPath());
         List<com.seating.model.Room> rooms = com.seating.util.ClassReader.readRoomsFromCSV(classFile.getPath());
-
         List<String> result = new ArrayList<>();
-
         // Group exams by date (preserving insertion order)
         Map<String, List<Exam>> examsByDate = new LinkedHashMap<>();
         for (Exam e : exams) {
             examsByDate.computeIfAbsent(e.getExamDate().trim(), k -> new ArrayList<>()).add(e);
         }
-
         // Process each exam date independently; rooms are available for each date
         for (Map.Entry<String, List<Exam>> dateEntry : examsByDate.entrySet()) {
             String date = dateEntry.getKey();
             List<Exam> dateExams = dateEntry.getValue();
-
             // Map (dept, year) → subject code for this date
             Map<String, String> deptYearToSubjCode = new LinkedHashMap<>();
             for (Exam e : dateExams) {
                 String key = e.getDepartment().trim() + "_" + e.getYear().trim();
                 deptYearToSubjCode.put(key, e.getSubjectCode().trim());
             }
-
             // Group students by subject code (subject code has priority)
             Map<String, List<Student>> studentsBySubjCode = new LinkedHashMap<>();
             for (Student s : students) {
@@ -51,19 +42,14 @@ public class SeatingService {
                     studentsBySubjCode.computeIfAbsent(subjCode, k -> new ArrayList<>()).add(s);
                 }
             }
-
             if (studentsBySubjCode.isEmpty()) continue;
-
             // Sort each subject-code group by roll number
             for (List<Student> group : studentsBySubjCode.values()) {
                 group.sort(Comparator.comparing(Student::getRollNo));
             }
-
             int requiredForDate = studentsBySubjCode.values().stream().mapToInt(List::size).sum();
             int placedForDate = 0;
-
             int numDistinctSubjects = studentsBySubjCode.size();
-
             if (numDistinctSubjects >= 2) {
                 // ==== NORMAL CASE: different subject codes → alternating columns ====
                 // (original logic preserved, queues are now subject-code groups)
@@ -170,7 +156,6 @@ public class SeatingService {
                     }
                     queueGlobalIdx++;
                 }
-
             } else {
                 // ==== GAP CASE: single subject code → S|G|S S|G|S S|G|S pattern ====
                 // All students write the same exam (same subject code across depts, or single dept)
@@ -205,13 +190,11 @@ public class SeatingService {
                     result.add("");
                 }
             }
-
             if (placedForDate < requiredForDate) {
                 int shortage = requiredForDate - placedForDate;
                 throw new IllegalStateException("Insufficient rooms/seats for exam date " + date + ". " + shortage + " student(s) could not be allocated.");
             }
         }
-
         return result;
     }
 }
