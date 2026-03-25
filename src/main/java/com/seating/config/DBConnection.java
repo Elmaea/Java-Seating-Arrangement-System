@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -27,9 +29,33 @@ public class DBConnection {
 
     @PostConstruct
     public void initializeTables() {
+        dropStudentTableTriggers();
         createAdminTable();
         createDeptTable();
         createStudentTable();
+    }
+
+    private void dropStudentTableTriggers() {
+        String findTriggersSql = "SELECT TRIGGER_NAME FROM information_schema.TRIGGERS " +
+                "WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'student'";
+
+        try (Connection connection = getConnection();
+             PreparedStatement findStmt = connection.prepareStatement(findTriggersSql);
+             ResultSet rs = findStmt.executeQuery()) {
+
+            while (rs.next()) {
+                String triggerName = rs.getString("TRIGGER_NAME");
+                if (triggerName == null || triggerName.isBlank()) {
+                    continue;
+                }
+
+                try (Statement dropStmt = connection.createStatement()) {
+                    dropStmt.execute("DROP TRIGGER IF EXISTS `" + triggerName + "`");
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to remove legacy triggers from student table", e);
+        }
     }
 
     private void createAdminTable() {

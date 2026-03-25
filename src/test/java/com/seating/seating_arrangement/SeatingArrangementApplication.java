@@ -1,12 +1,13 @@
-package com.seating.seating_arrangement; 
+package com.seating.seating_arrangement;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootApplication
-public class SeatingArrangementApplication {
+@SpringBootTest(classes = com.seating.SeatingArrangementApplication.class)
+class SeatingArrangementApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SeatingArrangementApplication.class, args);
+    @Test
+    void contextLoads() {
+        // Verifies that the main Spring Boot application context starts.
     }
 }
