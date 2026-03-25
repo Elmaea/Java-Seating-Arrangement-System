@@ -8,12 +8,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 @RestController
@@ -106,6 +109,7 @@ public class SeatingController {
             try (Workbook workbook = new XSSFWorkbook()) {
                 String currentRoom = null;
                 Sheet currentSheet = null;
+                Set<String> usedSheetNames = new HashSet<>();
                 
                 // Create cell styles
                 CellStyle defaultStyle = workbook.createCellStyle();
@@ -128,14 +132,15 @@ public class SeatingController {
                     if (line.startsWith("Room:")) {
                         // Start new sheet
                         currentRoom = line.split("\\(")[0].replace("Room:", "").trim();
-                        currentSheet = workbook.createSheet(currentRoom);
+                        String safeSheetName = buildUniqueSheetName(currentRoom, usedSheetNames);
+                        currentSheet = workbook.createSheet(safeSheetName);
                         rowIndex = 0;
                         isHeaderRow = true;
                         
                         // Add date row at the top
                         Row dateRow = currentSheet.createRow(rowIndex++);
                         Cell dateCell = dateRow.createCell(0);
-                        dateCell.setCellValue("Date: 07-09-2024");
+                        dateCell.setCellValue("Date: " + extractDateFromRoomLine(line));
                         
                         // Add empty row
                         currentSheet.createRow(rowIndex++);
@@ -194,6 +199,44 @@ public class SeatingController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private String extractDateFromRoomLine(String line) {
+        try {
+            int dashIndex = line.indexOf(" - ");
+            int capIndex = line.indexOf(" (Capacity:");
+            if (dashIndex >= 0 && capIndex > dashIndex + 3) {
+                return line.substring(dashIndex + 3, capIndex).trim();
+            }
+        } catch (Exception ignored) {
+        }
+        return "N/A";
+    }
+
+    private String buildUniqueSheetName(String rawName, Set<String> usedSheetNames) {
+        String safeBase = WorkbookUtil.createSafeSheetName(rawName == null ? "Sheet" : rawName.trim());
+        if (safeBase == null || safeBase.isBlank()) {
+            safeBase = "Sheet";
+        }
+
+        safeBase = safeBase.length() > 31 ? safeBase.substring(0, 31) : safeBase;
+        if (!usedSheetNames.contains(safeBase)) {
+            usedSheetNames.add(safeBase);
+            return safeBase;
+        }
+
+        int suffix = 2;
+        while (true) {
+            String marker = "_" + suffix;
+            int maxBaseLength = 31 - marker.length();
+            String candidateBase = safeBase.length() > maxBaseLength ? safeBase.substring(0, maxBaseLength) : safeBase;
+            String candidate = candidateBase + marker;
+            if (!usedSheetNames.contains(candidate)) {
+                usedSheetNames.add(candidate);
+                return candidate;
+            }
+            suffix++;
         }
     }
 }

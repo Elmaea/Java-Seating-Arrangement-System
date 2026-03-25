@@ -202,7 +202,10 @@
             btn.textContent = 'Exporting...';
 
             const res = await fetch(`${BACKEND_URL}/api/export-excel`);
-            if (!res.ok) throw new Error('Failed to export seating plan');
+            if (!res.ok) {
+                const errorText = (await res.text()).trim();
+                throw new Error(errorText || 'Failed to export seating plan');
+            }
 
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
