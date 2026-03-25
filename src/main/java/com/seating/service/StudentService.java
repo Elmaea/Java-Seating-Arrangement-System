@@ -4,7 +4,6 @@ import com.seating.entity.Student;
 import com.seating.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -28,7 +27,6 @@ public class StudentService {
      * @return The number of students saved
      * @throws IOException if file reading fails
      */
-    @Transactional
     public int uploadAndSaveStudents(MultipartFile studentFile, String dept) throws IOException {
         // Read students from CSV
         List<Student> students = readStudentsFromCSV(studentFile, dept);
@@ -124,12 +122,15 @@ public class StudentService {
         return studentRepository.findAll();
     }
 
+    public List<String> getUploadedDepartments() {
+        return studentRepository.findDistinctDepts();
+    }
+
     /**
      * Delete all students for a specific department
      * 
      * @param dept The department name
      */
-    @Transactional
     public void deleteStudentsByDept(String dept) {
         studentRepository.deleteByDept(dept);
     }
@@ -137,7 +138,6 @@ public class StudentService {
     /**
      * Delete all students from the database
      */
-    @Transactional
     public void deleteAllStudents() {
         studentRepository.deleteAll();
     }

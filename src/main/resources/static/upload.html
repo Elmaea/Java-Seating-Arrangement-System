@@ -11,6 +11,89 @@
             background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%);
             min-height: 100vh;
         }
+
+        .admin-action-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .details-btn {
+            background: #3f6b45;
+        }
+
+        .details-btn:hover {
+            background: #33593a;
+        }
+
+        .details-panel {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid #b6c8ab;
+            border-radius: 12px;
+            padding: 14px;
+            display: none;
+            text-align: left;
+        }
+
+        .details-panel.show {
+            display: block;
+        }
+
+        .summary-ok {
+            color: #1e6b2c;
+            font-weight: 700;
+        }
+
+        .summary-warning {
+            color: #b02a1f;
+            font-weight: 700;
+        }
+
+        .file-list {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .file-chip {
+            border: 1px solid #8db78f;
+            background: #f6fff6;
+            color: #214526;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .file-chip:hover {
+            background: #e8f6e8;
+        }
+
+        .file-preview {
+            margin-top: 12px;
+            overflow-x: auto;
+        }
+
+        .file-preview table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        .file-preview th,
+        .file-preview td {
+            border: 1px solid #d8e2d0;
+            padding: 8px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .file-preview th {
+            background: #eef7e8;
+        }
     </style>
 </head>
 <body>
@@ -20,7 +103,7 @@
 
     <div class="upload-outer">
         <h1 class="upload-title">Upload Data Files</h1>
-        <p class="upload-sub">Please upload the required CSV files to generate the seating plan</p>
+        <p class="upload-sub">Upload exam and class CSV files. Student data is taken from department uploads.</p>
         
         <div class="upload-cards">
             <div class="upload-card">
@@ -30,17 +113,6 @@
                     <input type="file" id="exam-csv" accept=".csv" style="display: none;">
                     <div class="upload-drop-inner">
                         Click to upload exam schedule CSV
-                    </div>
-                </div>
-            </div>
-
-            <div class="upload-card">
-                <div class="upload-card-title">Student List</div>
-                <p class="upload-card-desc">Upload student details with departments</p>
-                <div class="upload-drop" id="student-drop">
-                    <input type="file" id="student-csv" accept=".csv" style="display: none;">
-                    <div class="upload-drop-inner">
-                        Click to upload student list CSV
                     </div>
                 </div>
             </div>
@@ -57,14 +129,19 @@
             </div>
         </div>
 
-        <button id="generateBtn" class="generate-btn">Generate Seating Plan</button>
+        <div class="admin-action-row">
+            <button id="showDetailsBtn" class="generate-btn details-btn" type="button">Show Students Details</button>
+            <button id="generateBtn" class="generate-btn" type="button">Generate Seating Plan</button>
+        </div>
+
+        <div id="studentDetailsPanel" class="details-panel"></div>
     </div>
 
   <script>
     const BACKEND_URL = 'http://localhost:8080';
 
     // Handle file drop zone clicks
-    ['exam', 'student', 'class'].forEach(type => {
+    ['exam', 'class'].forEach(type => {
         const dropZone = document.getElementById(`${type}-drop`);
         const input = document.getElementById(`${type}-csv`);
         
@@ -79,19 +156,94 @@
         };
     });
 
+    async function loadStudentDetails() {
+        const panel = document.getElementById('studentDetailsPanel');
+        panel.classList.add('show');
+        panel.innerHTML = 'Loading details...';
+
+        const res = await fetch(`${BACKEND_URL}/api/admin/student-details`);
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'Unable to load details');
+        }
+
+        const files = Array.isArray(data.uploadedStudentFiles) ? data.uploadedStudentFiles : [];
+        const departments = Array.isArray(data.uploadedDepartments) ? data.uploadedDepartments : [];
+
+        const deptList = departments.length ? departments.join(', ') : 'No departments uploaded yet';
+
+        const fileListHtml = files.length
+            ? `<div class="file-list">${files.map(file => `<button type="button" class="file-chip" data-file="${file}">${file}</button>`).join('')}</div>`
+            : 'No department student files uploaded yet';
+
+        panel.innerHTML = `
+            <div><strong>Uploaded Student Files:</strong> ${fileListHtml}</div>
+            <div style="margin-top:8px;"><strong>Departments Uploaded:</strong> ${deptList}</div>
+            <div style="margin-top:8px;"><strong>Total Uploaded Students:</strong> ${data.totalUploadedStudents ?? 0}</div>
+            <div id="filePreview" class="file-preview"></div>
+        `;
+
+        panel.querySelectorAll('.file-chip').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const fileName = btn.getAttribute('data-file');
+                await loadStudentFilePreview(fileName);
+            });
+        });
+
+        return data;
+    }
+
+    async function loadStudentFilePreview(fileName) {
+        const preview = document.getElementById('filePreview');
+        if (!preview) {
+            return;
+        }
+
+        preview.innerHTML = 'Loading file content...';
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/admin/student-file?fileName=${encodeURIComponent(fileName)}`);
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Unable to load file content');
+            }
+
+            const headers = Array.isArray(data.headers) ? data.headers : [];
+            const rows = Array.isArray(data.rows) ? data.rows : [];
+
+            if (!headers.length) {
+                preview.innerHTML = `<div class="summary-warning">${fileName} has no readable content.</div>`;
+                return;
+            }
+
+            const headerHtml = headers.map(h => `<th>${h}</th>`).join('');
+            const rowsHtml = rows.length
+                ? rows.map(row => `<tr>${row.map(cell => `<td>${cell ?? ''}</td>`).join('')}</tr>`).join('')
+                : `<tr><td colspan="${headers.length}">No student rows found</td></tr>`;
+
+            preview.innerHTML = `
+                <div style="margin-bottom:8px;"><strong>Viewing:</strong> ${fileName} (${data.rowCount ?? 0} students)</div>
+                <table>
+                    <thead><tr>${headerHtml}</tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            `;
+        } catch (error) {
+            preview.innerHTML = `<div class="summary-warning">${error.message}</div>`;
+        }
+    }
+
     document.getElementById('generateBtn').onclick = async function() {
         const examFile = document.getElementById('exam-csv').files[0];
-        const studentFile = document.getElementById('student-csv').files[0];
         const classFile = document.getElementById('class-csv').files[0];
 
-        if (!examFile || !studentFile || !classFile) {
-            alert('Please upload all three required CSV files');
+        if (!examFile || !classFile) {
+            alert('Please upload both exam and class CSV files');
             return;
         }
 
         const formData = new FormData();
         formData.append('examFile', examFile);
-        formData.append('studentFile', studentFile);
         formData.append('classFile', classFile);
 
         try {
@@ -107,9 +259,15 @@
             const result = await res.json();
 
             if (res.ok) {
+                try {
+                    await loadStudentDetails();
+                } catch (detailsError) {
+                    console.error(detailsError);
+                }
+
                 window.location.href = 'seatingplan.html';
             } else {
-                alert('Upload failed: ' + result.message);
+                alert('Upload failed: ' + (result.error || result.message || 'Unknown error'));
             }
         } catch (error) {
             alert('Error uploading files: ' + error.message);
@@ -120,8 +278,18 @@
         }
     };
 
+    document.getElementById('showDetailsBtn').addEventListener('click', async () => {
+        try {
+            await loadStudentDetails();
+        } catch (error) {
+            const panel = document.getElementById('studentDetailsPanel');
+            panel.classList.add('show');
+            panel.innerHTML = `<div class="summary-warning">${error.message}</div>`;
+        }
+    });
+
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        window.location.href = '/login.html';
+        window.location.href = '/index.html';
     });
   </script>
 </body>

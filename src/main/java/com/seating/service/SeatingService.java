@@ -12,8 +12,13 @@ import java.util.*;
 
 @Service
 public class SeatingService {
+
     public List<String> generateSeatingPlan(File studentFile, File examFile, File classFile) {
         List<Student> students = StudentReader.readStudentsFromCSV(studentFile.getPath());
+        return generateSeatingPlan(students, examFile, classFile);
+    }
+
+    public List<String> generateSeatingPlan(List<Student> students, File examFile, File classFile) {
         List<Exam> exams = ExamReader.readExamsFromCSV(examFile.getPath());
         List<com.seating.model.Room> rooms = com.seating.util.ClassReader.readRoomsFromCSV(classFile.getPath());
 
@@ -53,6 +58,9 @@ public class SeatingService {
             for (List<Student> group : studentsBySubjCode.values()) {
                 group.sort(Comparator.comparing(Student::getRollNo));
             }
+
+            int requiredForDate = studentsBySubjCode.values().stream().mapToInt(List::size).sum();
+            int placedForDate = 0;
 
             int numDistinctSubjects = studentsBySubjCode.size();
 
@@ -100,6 +108,7 @@ public class SeatingService {
                                 if (deptAssign < queues.size() && queueIdx[deptAssign] < queues.get(deptAssign).size()) {
                                     Student placed = queues.get(deptAssign).get(queueIdx[deptAssign]++);
                                     grid[r][c] = placed.getRollNo();
+                                    placedForDate++;
                                 } else {
                                     grid[r][c] = "-";
                                 }
@@ -142,6 +151,7 @@ public class SeatingService {
                                     grid[r][c] = "-"; // Gap column (middle of each table)
                                 } else if (idx < queue.size()) {
                                     grid[r][c] = queue.get(idx++).getRollNo();
+                                    placedForDate++;
                                 } else {
                                     grid[r][c] = "-";
                                 }
@@ -178,6 +188,7 @@ public class SeatingService {
                                 grid[r][c] = "-"; // Gap column (middle of each table)
                             } else if (idx < allStudents.size()) {
                                 grid[r][c] = allStudents.get(idx++).getRollNo();
+                                placedForDate++;
                             } else {
                                 grid[r][c] = "-";
                             }
@@ -193,6 +204,11 @@ public class SeatingService {
                     }
                     result.add("");
                 }
+            }
+
+            if (placedForDate < requiredForDate) {
+                int shortage = requiredForDate - placedForDate;
+                throw new IllegalStateException("Insufficient rooms/seats for exam date " + date + ". " + shortage + " student(s) could not be allocated.");
             }
         }
 

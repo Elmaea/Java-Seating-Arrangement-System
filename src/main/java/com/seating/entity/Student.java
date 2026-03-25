@@ -1,19 +1,11 @@
 package com.seating.entity;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "student")
 public class Student {
 
-    @Id
-    @Column(name = "Rollno", length = 20)
     private String rollNo;
 
-    @Column(name = "Dept", length = 20)
     private String dept;
 
-    @Column(name = "Year", length = 10)
     private String year;
 
     public Student() {}

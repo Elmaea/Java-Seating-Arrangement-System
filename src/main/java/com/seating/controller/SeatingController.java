@@ -1,6 +1,7 @@
 package com.seating.controller;
 
 import com.seating.service.SeatingService;
+import com.seating.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -8,9 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.ss.util.CellRangeAddress;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 @RestController
 @RequestMapping("/api")
@@ -19,6 +23,9 @@ public class SeatingController {
 
     @Autowired
     private SeatingService seatingService;
+
+    @Autowired
+    private StudentService studentService;
 
     private final String UPLOAD_DIR;
 
@@ -29,35 +36,72 @@ public class SeatingController {
 
     @GetMapping("/seating")
     public List<String> getSeatingPlan() {
-        File studentFile = new File(UPLOAD_DIR + "Student.csv");
         File examFile = new File(UPLOAD_DIR + "Exam.csv");
         File classFile = new File(UPLOAD_DIR + "Class.csv");
+        List<com.seating.entity.Student> dbStudents = studentService.getAllStudents();
+        List<com.seating.model.Student> students = new ArrayList<>();
+        for (com.seating.entity.Student s : dbStudents) {
+            students.add(new com.seating.model.Student(s.getRollNo(), s.getDept(), s.getYear()));
+        }
 
         System.out.println("Looking for files in: " + UPLOAD_DIR);
-        System.out.println("Student file exists: " + studentFile.exists() + " at " + studentFile.getAbsolutePath());
+        System.out.println("Student records in DB: " + students.size());
         System.out.println("Exam file exists: " + examFile.exists() + " at " + examFile.getAbsolutePath());
         System.out.println("Class file exists: " + classFile.exists() + " at " + classFile.getAbsolutePath());
 
         // Check if files exist
-        if (!studentFile.exists() || !examFile.exists() || !classFile.exists()) {
-            return List.of("Error: Please upload CSV files first. Files not found in: " + UPLOAD_DIR);
+        if (!examFile.exists() || !classFile.exists()) {
+            return List.of("Error: Please upload Exam and Class CSV files first. Files not found in: " + UPLOAD_DIR);
         }
 
-        return seatingService.generateSeatingPlan(studentFile, examFile, classFile);
+        if (students.isEmpty()) {
+            return List.of("Error: No student data found. Departments must upload student CSV first.");
+        }
+
+        try {
+            return seatingService.generateSeatingPlan(students, examFile, classFile);
+        } catch (IllegalStateException e) {
+            return List.of("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/uploaded-departments")
+    public ResponseEntity<Map<String, Object>> getUploadedDepartments() {
+        List<com.seating.entity.Student> dbStudents = studentService.getAllStudents();
+        TreeSet<String> departments = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+        for (com.seating.entity.Student student : dbStudents) {
+            if (student.getDept() != null && !student.getDept().trim().isEmpty()) {
+                departments.add(student.getDept().trim());
+            }
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("count", departments.size());
+        response.put("departments", new ArrayList<>(departments));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/export-excel")
     public ResponseEntity<byte[]> exportToExcel() {
         try {
-            File studentFile = new File(UPLOAD_DIR + "Student.csv");
             File examFile = new File(UPLOAD_DIR + "Exam.csv");
             File classFile = new File(UPLOAD_DIR + "Class.csv");
-
-            if (!studentFile.exists() || !examFile.exists() || !classFile.exists()) {
-                return ResponseEntity.badRequest().body("Error: Files not found".getBytes());
+            List<com.seating.entity.Student> dbStudents = studentService.getAllStudents();
+            List<com.seating.model.Student> students = new ArrayList<>();
+            for (com.seating.entity.Student s : dbStudents) {
+                students.add(new com.seating.model.Student(s.getRollNo(), s.getDept(), s.getYear()));
             }
 
-            List<String> seatingData = seatingService.generateSeatingPlan(studentFile, examFile, classFile);
+            if (!examFile.exists() || !classFile.exists()) {
+                return ResponseEntity.badRequest().body("Error: Exam/Class files not found".getBytes());
+            }
+
+            if (students.isEmpty()) {
+                return ResponseEntity.badRequest().body("Error: No student data found in database".getBytes());
+            }
+
+            List<String> seatingData = seatingService.generateSeatingPlan(students, examFile, classFile);
             
             try (Workbook workbook = new XSSFWorkbook()) {
                 String currentRoom = null;
@@ -145,6 +189,8 @@ public class SeatingController {
                     .headers(headers)
                     .body(outputStream.toByteArray());
             }
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(("Error: " + e.getMessage()).getBytes());
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();

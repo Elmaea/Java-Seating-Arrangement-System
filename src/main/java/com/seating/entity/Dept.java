@@ -1,21 +1,13 @@
 package com.seating.entity;
 
-import jakarta.persistence.*;
-
-@Entity
 public class Dept {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "department_name", nullable = false, length = 100)
     private String deptName;
 
-    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
     public Long getId() { return id; }

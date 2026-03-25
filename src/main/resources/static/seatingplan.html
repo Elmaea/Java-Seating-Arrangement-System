@@ -11,6 +11,26 @@
             background: linear-gradient(135deg, #e9f3e8 0%, #dce8d5 50%, #c7dbbd 100%);
             min-height: 100vh;
         }
+
+        .uploaded-dept-panel {
+            margin: 12px 0 20px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid #bcd0ad;
+        }
+
+        .uploaded-dept-title {
+            font-weight: 700;
+            color: #2f4a21;
+            margin-bottom: 8px;
+        }
+
+        .uploaded-dept-list {
+            color: #2e3a28;
+            font-weight: 500;
+            line-height: 1.45;
+        }
     </style>
 </head>
 <body>
@@ -28,6 +48,11 @@
             </div>
         </div>
 
+        <div class="uploaded-dept-panel">
+            <div class="uploaded-dept-title">Departments Uploaded Student Details</div>
+            <div id="uploadedDeptList" class="uploaded-dept-list">Loading...</div>
+        </div>
+
         <div class="seating-rooms" id="seatingRooms">
             <div class="seating-placeholder">Loading seating arrangement...</div>
         </div>
@@ -39,9 +64,31 @@
 
     // Fetch seating plan on page load
     window.onload = async () => {
+        await loadUploadedDepartments();
         await fetchSeatingPlan();
         setupSearch();
     };
+
+    async function loadUploadedDepartments() {
+        const target = document.getElementById('uploadedDeptList');
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/uploaded-departments`);
+            if (!res.ok) throw new Error('Failed to fetch uploaded departments');
+
+            const data = await res.json();
+            const departments = Array.isArray(data.departments) ? data.departments : [];
+
+            if (departments.length === 0) {
+                target.textContent = 'No department has uploaded student details yet.';
+                return;
+            }
+
+            target.textContent = `${departments.length} department(s): ${departments.join(', ')}`;
+        } catch (error) {
+            target.textContent = 'Unable to load uploaded departments.';
+            console.error('Error:', error);
+        }
+    }
 
     async function fetchSeatingPlan() {
         try {
@@ -176,7 +223,7 @@
     };
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        window.location.href = '/login.html';
+        window.location.href = '/index.html';
     });
   </script>
 </body>

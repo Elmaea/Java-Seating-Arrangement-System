@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.clear();
             localStorage.clear();
             
-            // Redirect to login page
-            window.location.href = '/login.html';
+            // Redirect to index page
+            window.location.href = '/index.html';
         });
     }
 });
