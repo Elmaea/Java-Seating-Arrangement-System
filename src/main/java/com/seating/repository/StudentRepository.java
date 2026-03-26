@@ -45,7 +45,7 @@ public class StudentRepository {
     }
 
     public void deleteByDept(String dept) {
-        // Delete through the primary key to avoid MySQL safe-update failures when Dept is not indexed.
+
         String sql = "DELETE FROM student WHERE Rollno IN (" +
                 "SELECT Rollno FROM (SELECT Rollno FROM student WHERE Dept = ?) AS dept_rows)";
         try (Connection connection = dbConnection.getConnection();
